@@ -14,12 +14,18 @@ function setup(){
     adjustCanvasSize();
 
     canvas.mouseClicked(canvasClicked);
+    canvas.mouseMoved(canvasMouseMoved);
+    canvas.mousePressed(canvasMousePressed);
+    canvas.mouseReleased(canvasMouseReleased);
 
     ideaForm.addEventListener('submit', ideaSubmit);
     // ideaButton.addEventListener('click', ideaButtonClicked);
 
     socket = io();
-    socket.on('idea', newIdeaAdded);
+    socket.on('idea log', ideaLogReceived);
+    socket.on('idea add', newIdeaAdded);
+    socket.on('idea move', ideaMoved);
+    socket.on('idea released', ideaReleased);
 }
 
 function adjustCanvasSize(){
@@ -35,6 +41,7 @@ function windowResized(){
 // ----------------------------------------------------------------------------
 
 const ideas = [];
+let grabbed = null;
 
 function draw(){
     background(196);
@@ -53,10 +60,29 @@ function drawIdea(data){
     const idea = data.idea;
     const x = data.x * width;
     const y = data.y * height;
-    const w = textWidth(idea);
-    const h = textAscent() + textDescent();
+    const { w, h } = getTextSize(idea);
+    if(data.grabbed){
+        fill(190);
+    }
+    else{
+        fill(255);
+    }
     rect(x, y, w, h);
+    fill(0);
     text(idea, x, y);
+}
+
+function getTextSize(text){
+    const w = textWidth(text) + 4;
+    const h = textAscent() + textDescent() + 4;
+    return { w, h };
+}
+
+function isIdeaAt(idea, x, y){
+    const dx = Math.abs(idea.x * width - x);
+    const dy = Math.abs(idea.y * height - y);
+    const { w, h } = getTextSize(idea);
+    return dx < w / 2 && dy < h / 2;
 }
 
 // ----------------------------------------------------------------------------
@@ -65,6 +91,32 @@ function drawIdea(data){
 
 function canvasClicked(){
 
+}
+
+function canvasMousePressed(){
+    for(let i = ideas.length - 1; i >= 0; i--){
+        const idea = ideas[i];
+        if(!idea.grabbed && isIdeaAt(idea, mouseX, mouseY)){
+            idea.grabbed = true;
+            grabbed = idea;
+            socket.emit('idea move', grabbed);
+            return;
+        }
+    }
+}
+
+function canvasMouseReleased(){
+    ideas.forEach(idea => idea.grabbed = false);
+    socket.emit('idea released', grabbed);
+    grabbed = null;
+}
+
+function canvasMouseMoved(){
+    if(grabbed){
+        grabbed.x = constrain(mouseX / width, 0, 1);
+        grabbed.y = constrain(mouseY / height, 0, 1);
+        socket.emit('idea move', grabbed);
+    }
 }
 
 function ideaSubmit(e){
@@ -80,6 +132,26 @@ function ideaSubmit(e){
 // ----------------------------------------------------------------------------
 // Network Event Handlers
 // ----------------------------------------------------------------------------
+function ideaLogReceived(data){
+    data.forEach(idea => ideas.push(idea));
+}
+
 function newIdeaAdded(data){
-    ideas.push(data);
+    ideas.push({ ...data, grabbed: false });
+}
+
+function ideaMoved(data){
+    const target = ideas.find(idea => idea.id == data.id);
+    if(target){
+        target.x = data.x;
+        target.y = data.y;
+        target.grabbed = true;
+    }
+}
+
+function ideaReleased(data){
+    const target = ideas.find(idea => idea.id == data.id);
+    if(target){
+        target.grabbed = false;
+    }
 }
