@@ -3,6 +3,14 @@ let socket;
 const ideaForm = document.getElementById('ideaForm');
 const ideaText = document.getElementById('ideaText');
 const ideaButton = document.getElementById('ideaButton');
+const willButton = document.getElementById('willButton');
+const lotteryButton = document.getElementById('lotteryButton');
+const lotteryResult = document.getElementById('lotteryResult');
+const willInput = document.getElementById('usersInput');
+const joinedMembers = document.getElementById('members');
+
+
+const members = [];
 
 // ----------------------------------------------------------------------------
 // Setup
@@ -20,21 +28,55 @@ function setup(){
 
     ideaForm.addEventListener('submit', ideaSubmit);
     // ideaButton.addEventListener('click', ideaButtonClicked);
+    willButton.addEventListener('click', willButtonClicked);
+    lotteryButton.addEventListener('click', lotteryButtonClicked);
+
+    // slider = createSlider(0, 100, 50, 1);
+    // slider.position(10, 0);
+    // slider.style('width', '80px');
+    slider = document.getElementById("willSlider");
 
     socket = io();
     socket.on('idea log', ideaLogReceived);
     socket.on('idea add', newIdeaAdded);
     socket.on('idea move', ideaMoved);
     socket.on('idea released', ideaReleased);
+    socket.on('login log', loginLogReceived);
+
+    const userName = window.prompt("名前を入力してください");
+    socket.emit('login', { roomName, userName });
+
+    socket.on('login', (member) => {
+        console.log(`${member}が参加しました!`);
+        // document.querySelector('#users').innerHTML = ``;
+        members.push(member);
+        members.forEach(showLoginMembers);
+    })
+
 }
 
+
+
 function adjustCanvasSize(){
-    resizeCanvas(document.body.clientWidth - 40, 400);
+    resizeCanvas(document.body.clientWidth -140, 400);//元は-40
 }
 
 function windowResized(){
     adjustCanvasSize();
 }
+
+function drawArrow(){
+    line(10, 200, document.body.clientWidth -170, 200);
+    line(document.body.clientWidth -165, 215, document.body.clientWidth -150, 200);
+    line(document.body.clientWidth -165, 185, document.body.clientWidth -150, 200);
+}
+
+// function fire(){
+//     let place = slider.value();
+//     let fireX = (document.body.clientWidth - 50)/100*place;
+//     textSize(60);
+//     text("🔥", fireX, 215);    
+// }
 
 // ----------------------------------------------------------------------------
 // Render data
@@ -45,7 +87,22 @@ let grabbed = null;
 
 function draw(){
     background(196);
+    drawArrow();
     drawIdeas();
+    drawMarker(slider.value);
+    
+    
+}
+
+function drawMarker(will){
+    push();
+    const marker = "🔥";
+    textSize(50);
+    let X = (width-textWidth(marker))/100*will;
+    // ellipse(X, 200, 20, 20);
+    text(marker, X, 215);
+    // text(will, X, 215);
+    pop();
 }
 
 function drawIdeas(){
@@ -129,9 +186,56 @@ function ideaSubmit(e){
     return false;
 }
 
+function willButtonClicked(e){
+    e.preventDefault();
+    const will = slider.value;
+    //スライダーを動かせないようにしたい
+    socket.emit('will input', will);
+    socket.on('will input', (will) => {
+        // const usersWill = will.name + ": " + will.will + "%の挑戦したい";
+        const usersWill = ": 🆗";
+        const w = document.createElement('li');
+        w.textContent = usersWill;
+        willInput.appendChild(w);
+    })
+    lotteryButton = false;
+}
+
+function lotteryButtonClicked(){
+    const msg = "抽選しました！";
+    console.log(msg);
+    socket.emit('lottery start', msg);
+    socket.on('lottery start', (bestIdea) => {
+        console.log(bestIdea);
+        const result = document.createElement('li');
+        result.textContent = bestIdea.idea;
+        lotteryResult.appendChild(result);
+    })
+}
+
+function showLoginMembers(member){
+    console.log(member);
+    const mid = "member-" + member;
+    let u = document.getElementById(mid);
+    console.log(u);
+    if(!u){
+        u = document.createElement('li');
+        u.textContent = member;
+        u.id = mid;
+        joinedMembers.appendChild(u);
+    }
+
+}
+
 // ----------------------------------------------------------------------------
 // Network Event Handlers
 // ----------------------------------------------------------------------------
+function loginLogReceived(data){
+    data.forEach(member => members.push(member));
+    members.forEach(showLoginMembers);
+    //dataの中にあるmemberをmembersに順に入れていく
+}
+
 function ideaLogReceived(data){
     data.forEach(idea => ideas.push(idea));
 }
@@ -155,3 +259,6 @@ function ideaReleased(data){
         target.grabbed = false;
     }
 }
+
+
+
