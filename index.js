@@ -5,7 +5,7 @@ const e = require('express');
 const mongoose = require("mongoose");
 mongoose.connect(MONGODB_URL, { useNewUrlParser: true });
 
-const ideaPost = mongoose.model("ideaPost", { idea: String, name: String, roomName: String });
+const ideaPost = mongoose.model("ideaPost", { idea: String, x: Number, y: Number, name: String, roomName: String });
 const willPost = mongoose.model("willPost", { will: Number, name: String, roomName: String });
 
 const express = require('express');
@@ -112,51 +112,104 @@ io.on('connection', (socket) => {
         });
 
         socket.on('idea released', (data) => {
-
             io.to(room).emit('idea released', data);
+            const x = data.x;
+            const y = data.y;
+            const idea = data.idea;
+            const filter = { idea: idea, roomName: room };
+            const update = { x, y };
+            const options = { new: true, upsert: true };
+            ideaPost.findOneAndUpdate(filter, update, options, function(err, result){
+                if(err) throw err;
+                console.log(result);
+            });
         });
 
         socket.on('will input', (will) => {
-            const data = { will, name: member, roomName: room }; 
-            willPost.create(data);
-            io.to(room).emit('will input', data);
-
-            willPost.updateMany({ name : member }, { $set: { will: will }}, function(err){
+            const filter = { name: member, roomName: room };
+            const update = { will };
+            const options = { new: true, upsert: true };
+            willPost.findOneAndUpdate(filter, update, options, function(err, result){
                 if(err) throw err;
-            }).exec(
-            willPost.find({ roomName: room }).distinct('will', function(err, result) {
-                if (err) {
-                    throw err
-                }
-                else{
-                    const willBox = result;
-                    console.log(willBox);
-                }
-            })
-            )
+                console.log(result);
+            });
+            // const data = { will, name: member, roomName: room }; 
+            
+            // if(willPost.exists({name : member, roomName : room})){
+            //     willPost.deleteMany({ name : member, roomName : room }, function(err){
+            //         if(err) throw err;
+            //         console.log('前回のデータを' + will + 'に更新しました');
+            //     });//true
+            // }
+            // willPost.create(data);
+            console.log('データを作成しました')
+            io.to(room).emit('will input', data);
         });
             
         socket.on('lottery start', (data) => {
-            ideaPost.find({ roomName: room }, { "_id" : 0, "idea" : 1 }, function(err, result) {
+            const ideaX = data.x*100;
+            const ideaY = data.y*100;
+            willPost.find({ roomName: room }, { "_id" : 0, "will" : 1 }, function(err, result) {
                 if (err) {
                     throw err
-                }
-                else{
-                    const ideaBox = result;
-                    console.log(ideaBox);//resultの中身は出た
-                    const shuffleIdea = Math.floor(Math.random() * ideaBox.length);
-                    const bestIdea = ideaBox[shuffleIdea];
-                    io.emit('lottery start', bestIdea);
-                }
+                    }
+                    else{
+                        const willBox = result;
+                        const minWill = willBox.map(w => w.will).reduce((a,b)=>a<b?a:b)
+                        console.log(minWill);
+                        io.emit('lottery start', minWill);
+                        const willX = minWill;
+                        const willY = 50;
+                        // const distance = Math.sqrt((ideaX - willX)**2 + (ideaY - willY)**2);
+                        // const idea = data.idea;
+                        ideaPost.find({ roomName: room }, function(err, result) {
+                            if(err) { throw err
+                            }else{
+                            const xOfAllIdeas = result.map(w => w.x);//アイデアのx座標（配列）
+                            const yOfAllIdeas = result.map(w => w.y);//アイデアのy座標（配列）
+                            xOfAllIdeas.forEach(function(value, index, array){array[index]=(value*100-willX)**2});
+                            yOfAllIdeas.forEach(function(value, index, array){array[index]=(value*100-willY)**2});
+                            function func(...arr){
+                                let ret_arr = arr[0].slice();
+                                for(let i=1;i<arr.length;i++){
+                                    for(let j=0; j<arr[i].length; j++)ret_arr[j] += arr[i][j];
+                                }
+                                return ret_arr;  
+                            }
+                            const ideaD = func(xOfAllIdeas,yOfAllIdeas);
+                            ideaD.forEach(function(value, index, array){array[index]=1/Math.sqrt(value)});
+                            const totalD = ideaD.reduce(function(sum, element){
+                                return sum + element;
+                              }, 0);
+                            console.log(totalD);
+                            ideaD.forEach(function(value, index, array){array[index]=value/totalD});
+                            const p = ideaD;//当選確率
+                            console.log(p);
+
+                            }
+                        })
+                    }
+                        
+                        // const totalW = willBox.map(w => w.will).reduce((sum,element)=>sum+element,0);
+                        // console.log(totalW);
+                        // const p = 1/distance/
+                        // if(distance = 0){
+                            
+                        // }       
+
+
+                    // const ideaBox = result;
+                    // console.log(ideaBox);//resultの中身は出た
+                    // const shuffleIdea = Math.floor(Math.random() * ideaBox.length);
+                    // const bestIdea = ideaBox[shuffleIdea];
+                    // io.emit('lottery start', bestIdea);
+            //     }
+            // });
             });
-        })
-
-        
+        });
     });
-
-    
-
 });
+
 
 server.listen(port, () => {
     console.log('Server listening on port:'  + port);

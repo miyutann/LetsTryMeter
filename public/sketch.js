@@ -66,7 +66,7 @@ function windowResized(){
 }
 
 function drawArrow(){
-    line(10, 200, document.body.clientWidth -170, 200);
+    line(10, 200, document.body.clientWidth -150, 200);
     line(document.body.clientWidth -165, 215, document.body.clientWidth -150, 200);
     line(document.body.clientWidth -165, 185, document.body.clientWidth -150, 200);
 }
@@ -198,19 +198,24 @@ function willButtonClicked(e){
         w.textContent = usersWill;
         willInput.appendChild(w);
     })
-    lotteryButton = false;
+    // lotteryButton = false;
 }
 
 function lotteryButtonClicked(){
+
+
     const msg = "抽選しました！";
     console.log(msg);
-    socket.emit('lottery start', msg);
-    socket.on('lottery start', (bestIdea) => {
-        console.log(bestIdea);
-        const result = document.createElement('li');
-        result.textContent = bestIdea.idea;
-        lotteryResult.appendChild(result);
+    // socket.emit('lottery start', msg);
+    socket.on('lottery start', will => {
+
     })
+    // socket.on('lottery start', (bestIdea) => {
+    //     console.log(bestIdea);
+    //     const result = document.createElement('li');
+    //     result.textContent = bestIdea.idea;
+    //     lotteryResult.appendChild(result);
+    // })
 }
 
 function showLoginMembers(member){
@@ -258,6 +263,8 @@ function ideaReleased(data){
     if(target){
         target.grabbed = false;
     }
+    socket.emit('lottery start', data);
+    console.log(data.y);
 }
 
 
