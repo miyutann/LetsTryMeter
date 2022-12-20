@@ -113,16 +113,6 @@ io.on('connection', (socket) => {
 
         socket.on('idea released', (data) => {
             io.to(room).emit('idea released', data);
-            const x = data.x;
-            const y = data.y;
-            const idea = data.idea;
-            const filter = { idea: idea, roomName: room };
-            const update = { x, y };
-            const options = { new: true, upsert: true };
-            ideaPost.findOneAndUpdate(filter, update, options, function(err, result){
-                if(err) throw err;
-                console.log(result);
-            });
         });
 
         socket.on('will input', (will) => {
@@ -133,22 +123,24 @@ io.on('connection', (socket) => {
                 if(err) throw err;
                 console.log(result);
             });
-            // const data = { will, name: member, roomName: room }; 
-            
-            // if(willPost.exists({name : member, roomName : room})){
-            //     willPost.deleteMany({ name : member, roomName : room }, function(err){
-            //         if(err) throw err;
-            //         console.log('前回のデータを' + will + 'に更新しました');
-            //     });//true
-            // }
-            // willPost.create(data);
             console.log('データを作成しました')
             io.to(room).emit('will input', data);
         });
             
-        socket.on('lottery start', (data) => {
-            const ideaX = data.x*100;
-            const ideaY = data.y*100;
+        socket.on('lottery ready', (data) => {
+            const x = data.x;
+            const y = data.y;
+            const idea = data.idea;
+            const filter = { idea: idea, roomName: room };
+            const update = { x, y };
+            const options = { new: true, upsert: true };
+            ideaPost.findOneAndUpdate(filter, update, options, function(err, result){
+                if(err) throw err;
+                console.log(result);
+            })//座標位置を保存
+        });
+
+        socket.on('lottery start', (m)=>{
             willPost.find({ roomName: room }, { "_id" : 0, "will" : 1 }, function(err, result) {
                 if (err) {
                     throw err
@@ -156,12 +148,11 @@ io.on('connection', (socket) => {
                     else{
                         const willBox = result;
                         const minWill = willBox.map(w => w.will).reduce((a,b)=>a<b?a:b)
-                        console.log(minWill);
-                        io.emit('lottery start', minWill);
+                        // console.log(minWill);
+                        io.to(room).emit('lottery ready', minWill);
                         const willX = minWill;
                         const willY = 50;
-                        // const distance = Math.sqrt((ideaX - willX)**2 + (ideaY - willY)**2);
-                        // const idea = data.idea;
+
                         ideaPost.find({ roomName: room }, function(err, result) {
                             if(err) { throw err
                             }else{
@@ -177,36 +168,51 @@ io.on('connection', (socket) => {
                                 return ret_arr;  
                             }
                             const ideaD = func(xOfAllIdeas,yOfAllIdeas);
-                            ideaD.forEach(function(value, index, array){array[index]=1/Math.sqrt(value)});
+                            ideaD.forEach(function(value, index, array){array[index]=1/Math.sqrt(value)});// 1/3,1/4(距離分の1)
                             const totalD = ideaD.reduce(function(sum, element){
                                 return sum + element;
-                              }, 0);
-                            console.log(totalD);
+                              }, 0);// 1/3+1/4(距離分の1の合計)
+                            // ideaD.forEach(function(value, index, array){array[index]=Math.floor(value/totalD*100)});
                             ideaD.forEach(function(value, index, array){array[index]=value/totalD});
+                            const ideaBox = result.map(w => w.idea);
                             const p = ideaD;//当選確率
-                            console.log(p);
-
+                            var lot = p.reduce((value, index, array) => {
+                                value[ideaBox[array]] = index;
+                                return value;
+                            }, {});
+                            const array = Object.keys(lot).map((k)=>({ key: k, value: lot[k] }));
+                            array.sort((a, b) => a.value - b.value);
+                            lot = Object.assign({}, ...array.map((item) => ({
+                            [item.key]: item.value,
+                            })));
+                            console.log(lot);
+                            //   昇順に並び替えた
+                            // var number = Math.floor(Math.random()*100);
+                            var number = Math.random();
+                            var weight = 0;
+                            var election = "";
+                            for(var key in lot){
+                                weight += lot[key]; //すき焼き:0.1、焼肉:0.5、しゃぶしゃぶ:1
+                                if(number < weight){
+                                election = key;
+                                break;
+                                }
                             }
-                        })
-                    }
-                        
-                        // const totalW = willBox.map(w => w.will).reduce((sum,element)=>sum+element,0);
-                        // console.log(totalW);
-                        // const p = 1/distance/
-                        // if(distance = 0){
+                            console.log(election);//抽選結果
+                            const lotteryData = { election, lot }
+                            io.emit('lottery start', lotteryData);
+                            //抽選結果をクライアントに送って、ルーレットの画面を出す
                             
-                        // }       
-
-
-                    // const ideaBox = result;
-                    // console.log(ideaBox);//resultの中身は出た
-                    // const shuffleIdea = Math.floor(Math.random() * ideaBox.length);
-                    // const bestIdea = ideaBox[shuffleIdea];
-                    // io.emit('lottery start', bestIdea);
-            //     }
-            // });
+                            }
+                        
+                        })
+                    
+                    
+                    }
+               
+                })
             });
-        });
+        
     });
 });
 

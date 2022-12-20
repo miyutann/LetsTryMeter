@@ -65,12 +65,6 @@ function windowResized(){
     adjustCanvasSize();
 }
 
-function drawArrow(){
-    line(10, 200, document.body.clientWidth -150, 200);
-    line(document.body.clientWidth -165, 215, document.body.clientWidth -150, 200);
-    line(document.body.clientWidth -165, 185, document.body.clientWidth -150, 200);
-}
-
 // function fire(){
 //     let place = slider.value();
 //     let fireX = (document.body.clientWidth - 50)/100*place;
@@ -86,11 +80,10 @@ const ideas = [];
 let grabbed = null;
 
 function draw(){
-    background(196);
+    background(255,249,235);
     drawArrow();
     drawIdeas();
     drawMarker(slider.value);
-    
     
 }
 
@@ -109,6 +102,7 @@ function drawIdeas(){
     push();
     textAlign(CENTER, CENTER);
     rectMode(CENTER);
+    textSize(15);
     ideas.forEach(drawIdea);
     pop();
 }
@@ -120,11 +114,18 @@ function drawIdea(data){
     const { w, h } = getTextSize(idea);
     if(data.grabbed){
         fill(190);
-    }
-    else{
+    }else if(x<width/5){
         fill(255);
+    }else if(width/5<=x && x<width*2/5){
+        fill(255,249,210);
+    }else if(width*2/5<=x && x<width*3/5){
+        fill(255,188,0);
+    }else if(width*3/5<=x && x<width*4/5){
+        fill(255,152,0);
+    }else{
+        fill(255,80,0);
     }
-    rect(x, y, w, h);
+    rect(x, y, w, h, h/9);
     fill(0);
     text(idea, x, y);
 }
@@ -141,6 +142,13 @@ function isIdeaAt(idea, x, y){
     const { w, h } = getTextSize(idea);
     return dx < w / 2 && dy < h / 2;
 }
+
+function drawArrow(){
+    line(10, 200, document.body.clientWidth -150, 200);
+    line(document.body.clientWidth -165, 215, document.body.clientWidth -150, 200);
+    line(document.body.clientWidth -165, 185, document.body.clientWidth -150, 200);
+}
+
 
 // ----------------------------------------------------------------------------
 // UI Event Handlers
@@ -193,29 +201,24 @@ function willButtonClicked(e){
     socket.emit('will input', will);
     socket.on('will input', (will) => {
         // const usersWill = will.name + ": " + will.will + "%の挑戦したい";
-        const usersWill = ": 🆗";
-        const w = document.createElement('li');
-        w.textContent = usersWill;
-        willInput.appendChild(w);
+        // const usersWill = ": 🆗";
+        // const w = document.createElement('li');
+        // w.textContent = usersWill;
+        // willInput.appendChild(w);
     })
     // lotteryButton = false;
 }
 
 function lotteryButtonClicked(){
-
-
     const msg = "抽選しました！";
     console.log(msg);
-    // socket.emit('lottery start', msg);
-    socket.on('lottery start', will => {
-
+    socket.emit('lottery start', msg);
+    socket.on('lottery start', (data) => {
+        console.log(data.election);
+        // const result = document.createElement('li');
+        // result.textContent = data.value;
+        // lotteryResult.appendChild(result);
     })
-    // socket.on('lottery start', (bestIdea) => {
-    //     console.log(bestIdea);
-    //     const result = document.createElement('li');
-    //     result.textContent = bestIdea.idea;
-    //     lotteryResult.appendChild(result);
-    // })
 }
 
 function showLoginMembers(member){
@@ -262,9 +265,8 @@ function ideaReleased(data){
     const target = ideas.find(idea => idea.id == data.id);
     if(target){
         target.grabbed = false;
+        socket.emit('lottery ready', data);
     }
-    socket.emit('lottery start', data);
-    console.log(data.y);
 }
 
 
