@@ -200,7 +200,7 @@ io.on('connection', (socket) => {
                             }
                             console.log(election);//抽選結果
                             const lotteryData = { election, lot }
-                            io.emit('lottery start', lotteryData);
+                            io.to(room).emit('lottery start', lotteryData);
                             //抽選結果をクライアントに送って、ルーレットの画面を出す
                             
                             }

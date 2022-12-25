@@ -58,7 +58,7 @@ function setup(){
 
 
 function adjustCanvasSize(){
-    resizeCanvas(document.body.clientWidth -140, 400);//元は-40
+    resizeCanvas(document.body.clientWidth -40, 400);//元は-40
 }
 
 function windowResized(){
@@ -144,9 +144,13 @@ function isIdeaAt(idea, x, y){
 }
 
 function drawArrow(){
-    line(10, 200, document.body.clientWidth -150, 200);
-    line(document.body.clientWidth -165, 215, document.body.clientWidth -150, 200);
-    line(document.body.clientWidth -165, 185, document.body.clientWidth -150, 200);
+    push();
+    line(10, 200, document.body.clientWidth -50, 200);
+    line(document.body.clientWidth -65, 215, document.body.clientWidth -50, 200);
+    line(document.body.clientWidth -65, 185, document.body.clientWidth -50, 200);
+    textSize(30);
+    text("Try!", document.body.clientWidth -100, 165);
+    pop();
 }
 
 
@@ -199,11 +203,14 @@ function willButtonClicked(e){
     const will = slider.value;
     //スライダーを動かせないようにしたい
     socket.emit('will input', will);
-    socket.on('will input', (will) => {
-        // const usersWill = will.name + ": " + will.will + "%の挑戦したい";
-        // const usersWill = ": 🆗";
+    socket.on('will input', (data) => {
+        // var parent = document.querySelector('.justify-content-start list-inline');
+        // var target = document.querySelector('.list-inline-item');
+        // parent.removeChild(target);
+        // console.log(will);
         // const w = document.createElement('li');
-        // w.textContent = usersWill;
+        // w.className = 'list-inline-item';
+        // w.textContent = will;
         // willInput.appendChild(w);
     })
     // lotteryButton = false;
@@ -228,6 +235,7 @@ function showLoginMembers(member){
     console.log(u);
     if(!u){
         u = document.createElement('li');
+        u.className = 'list-inline-item';
         u.textContent = member;
         u.id = mid;
         joinedMembers.appendChild(u);
@@ -251,6 +259,25 @@ function ideaLogReceived(data){
 function newIdeaAdded(data){
     ideas.push({ ...data, grabbed: false });
 }
+
+const themes = ['gohan', 'asobi'];
+const gohan = ["美味しいシュウマイ", "回転寿司", "お好み焼き"];
+const asobi = ["ユニバ", "プラネタリウム", "岩盤浴"];
+const output = document.getElementById('ideaText');
+themes.forEach((value)=>{
+    const getTheme = document.getElementById(value);
+    getTheme.addEventListener('click', ()=>{
+    const text = getTheme.textContent;
+    if(text=="ご飯🍚"){
+        const randomG = gohan[Math.floor(Math.random()*gohan.length)];
+        output.value = randomG;
+    }else if(text=="遊び🎡"){
+        const randomA = asobi[Math.floor(Math.random()*asobi.length)];
+        output.value = randomA;
+    }
+    })
+})
+
 
 function ideaMoved(data){
     const target = ideas.find(idea => idea.id == data.id);

@@ -8,55 +8,51 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     </head>
     <body class="container p-1">
-        <h1>Let's Try Meter</h1>
+        <dl class="row">
+            <h1 class="col-sm-6">Let's Try Meter</h1>
+                <dd class="col-sm-2">ルーム: <%= name %></dd>
+                <ul class="col-sm-4 list-inline" id="members"></ul>
+        </dl>
     
-    <div class="row">
+    <div class="p-2 bd-highlight card flex-fill">
+        <div class="d-flex flex-column bd-highlight">
 
-        <div class="d-flex justify-content-between">
-            <div class="card flex-fill">
                 <h5 class="card-title">アイデア</h5>
-            <form id="ideaForm" class="input-group">
+            <form id="ideaForm" class="input-group mb-2">
                 <input id="ideaText" type="text" class="form-control" placeholder="あなたの案">
-                <button id="ideaButton" class="btn btn-warning" type="submit">提案する</button>
+                <button id="btn" class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">おすすめ</button>
+                <button id="ideaButton" class="btn btn-outline-secondary" type="submit">提案する</button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <option id="gohan" class="dropdown-item">ご飯🍚</option>
+                    <option id="asobi" class="dropdown-item">遊び🎡</option>
+                    </ul>
             </form>
-            </div>
             
-            <div class="card flex-fill">
-                <h5 class="card-title" id="willslider">挑戦への意欲🔥</h5>
-                <p class="card-text">あなたの意欲<h8 id="usersInput"></h8></p>
-                    <input id="willSlider" type="range" min="0" max="100" step="1" >
-                    <button id="willButton" class="btn btn-warning" type="button">決定</button>
+                <h5 class="card-title" id="willslider">どのくらいTryする?</h5>
+                <dl class="p-2 bd-highlight card flex-fill">
+                <div class="d-flex justify-content-between">
+                <h1 id="usersInput" class="col-sm-1">🔥</h1>
+                <input id="willSlider" class="col-sm-8" type="range" min="0" max="100" step="1" >
+                <button id="willButton" class="btn btn-outline-secondary" type="button">決定</button>
+                </div>
+                </dl>
+                
+                <h5 class="card-title">アイデアを動かそう!</h5>
+                <div id="p5container" class="bd-highlight"></div>
+                
+                <div class="text-center">
+                <button type="button" id="lotteryButton" class="btn btn-outline-danger">Let's Try!</button>
+            </div>
+            </div>
+                <div id="lotteryResult"></div>    
             </div>
         </div>
-
-            <div class="d-flex justify-content-between">
-
-                <div id="p5container" class="my-3"></div>
-
-                <div>
-                    <h5>参加メンバー</h5>
-                    <p id="members"></p>
-                    <button type="button" id="lotteryButton" class="btn btn-danger">抽選する</button>
-                </div>
-
-                <!-- <div class="card">
-                    <h5 class="card-title">参加メンバー</h5>
-                    <p id="members" class="card-text"></p>
-                    <button type="button" id="lotteryButton" class="btn btn-primary" disabled>抽選する</button>
-                </div> -->
-
-                
-            </div>
-            
-            <div id="lotteryResult"></div>
-
-            
-            
-
-
     </div>
 
     
+            
+
+
 
     </body>
         
