@@ -11,6 +11,14 @@ const joinedMembers = document.getElementById('members');
 
 
 const members = [];
+const rouletteData = [];
+const texts = [];
+
+let minWill;
+let state;
+let startTime, stopTime;
+let hit;
+const colors = [];
 
 // ----------------------------------------------------------------------------
 // Setup
@@ -37,6 +45,7 @@ function setup(){
     slider = document.getElementById("willSlider");
 
     socket = io();
+    socket.on('past idea', pastIdeaAdded);
     socket.on('idea log', ideaLogReceived);
     socket.on('idea add', newIdeaAdded);
     socket.on('idea move', ideaMoved);
@@ -45,14 +54,23 @@ function setup(){
 
     const userName = window.prompt("名前を入力してください");
     socket.emit('login', { roomName, userName });
+    socket.emit('past idea', userName);
 
-    socket.on('login', (member) => {
-        console.log(`${member}が参加しました!`);
-        // document.querySelector('#users').innerHTML = ``;
-        members.push(member);
+    socket.on('login', (data) => {
+        console.log(data.member + "が参加しました!");
+        minWill = data.minWill;
+        members.push(data.member);
         members.forEach(showLoginMembers);
+        const newIdeas = Array.from(
+            new Map(ideas.map((data) => [data.idea, data])).values()
+          );
+        console.log(newIdeas);
     })
 
+//----------------------
+//roulette
+//----------------------
+    state = 0;
 }
 
 
@@ -84,7 +102,7 @@ function draw(){
     drawArrow();
     drawIdeas();
     drawMarker(slider.value);
-    
+    showRoulette();
 }
 
 function drawMarker(will){
@@ -93,6 +111,18 @@ function drawMarker(will){
     textSize(50);
     let X = (width-textWidth(marker))/100*will;
     // ellipse(X, 200, 20, 20);
+    text(marker, (width-textWidth(marker))/100*minWill, 215);
+    push();
+    textSize(13);
+    if(minWill==null){
+        text("あなたが最小値です", X-20, 170);
+    }else if(minWill!==null){
+        text("メンバー最小値", (width-textWidth(marker))/100*minWill-35, 170);
+        text(`あなた`, X+15, 170);
+        text(`${minWill}%`, (width-textWidth(marker))/100*minWill-5, 235);
+    }
+    text(`${will}%`, X+20, 235);
+    pop();
     text(marker, X, 215);
     // text(will, X, 215);
     pop();
@@ -101,6 +131,7 @@ function drawMarker(will){
 function drawIdeas(){
     push();
     textAlign(CENTER, CENTER);
+    // text("Click to start", width / 2, height / 2)
     rectMode(CENTER);
     textSize(15);
     ideas.forEach(drawIdea);
@@ -148,11 +179,99 @@ function drawArrow(){
     line(10, 200, document.body.clientWidth -50, 200);
     line(document.body.clientWidth -65, 215, document.body.clientWidth -50, 200);
     line(document.body.clientWidth -65, 185, document.body.clientWidth -50, 200);
-    textSize(30);
-    text("Try!", document.body.clientWidth -100, 165);
+    push();
+    textSize(13);
+    text("High →", document.body.clientWidth/2, 20);
+    text("← Low", document.body.clientWidth/2-80, 20);
+    pop();
     pop();
 }
-
+function showRoulette(){
+    if(state == 1){
+        // const newTexts = Array.from(new Set(texts));
+        background(255);
+        textAlign(LEFT, TOP);
+        // text(newTexts[hit % newTexts.length], 0, 0);
+        push();
+        textAlign(CENTER, TOP);
+        textSize(20);
+        text("抽選中...", width/2, 0);
+        pop();
+        const t = millis();
+        if(drawRoulette(t - startTime, hit)){
+          stopTime = t;
+          state = 2;
+        }
+      }
+      else if(state == 2){
+        const newTexts = Array.from(new Set(texts));
+        background(255);
+        textAlign(LEFT, TOP);
+        push();
+        textAlign(CENTER, TOP);
+        textSize(20);
+        text(newTexts[hit % newTexts.length]+"が選ばれました!", width/2, 0);
+        pop();
+        drawRoulette(stopTime - startTime, hit);
+        share();
+      }
+}
+function drawRoulette(t, hit){ // t = アニメーション経過時間, hit = あたりの番号
+    const newRouletteData = Array.from(new Set(rouletteData));
+    const sum = sumArray(newRouletteData);
+    
+    const a = log(t) * 10;
+        
+    push();
+    textAlign(CENTER, CENTER);
+    translate(width / 2, height / 2);
+    
+    rotate(a);
+    
+    const hitSum = sumArray(newRouletteData.slice(0, hit));
+    const hitA = (TWO_PI * hitSum / sum + a) % TWO_PI;
+    const hitRange = TWO_PI * newRouletteData[hit] / sum;
+    const shouldStop = t > 5000 && (hitA < hitRange / 2 || hitA > TWO_PI - hitRange / 2);
+  
+    for(let i = 0; i < newRouletteData.length; i++){
+      let p = TWO_PI * newRouletteData[i] / sum / 2;
+      
+      rotate(p);
+      stroke("#6c757d");
+      fill(shouldStop && i == hit ? "#dc3545" : 255);
+      arc(0, 0, 300, 300, -p, p, PIE);
+  
+      noStroke();
+      fill(0);
+      const newTexts = Array.from(new Set(texts));
+      text(newTexts[i % newTexts.length], 100, 0);
+      rotate(p);
+    }
+    pop();
+    
+    return shouldStop; // returns true if animation should stop
+  }
+  
+  function sumArray(arr){
+    return arr.reduce((acc, v) => acc + v, 0);
+  }
+  
+  function rouletteStart(){
+    const newRouletteData = Array.from(new Set(rouletteData));
+    state = 1;
+    startTime = millis();
+    // hit = floor(random(newRouletteData.length));
+  }
+  function share(){
+    const share_line = document.getElementById("js-share-line");
+    share_line.setAttribute(
+	    "href",
+	    "https://social-plugins.line.me/lineit/share?url=" + share_url
+    );
+  }
+//   function mousePressed(){
+//     rouletteStart()
+//   }
 
 // ----------------------------------------------------------------------------
 // UI Event Handlers
@@ -222,10 +341,19 @@ function lotteryButtonClicked(){
     socket.emit('lottery start', msg);
     socket.on('lottery start', (data) => {
         console.log(data.election);
+        const dlKeys = Object.keys(data.lot);
+        const dlValues = Object.values(data.lot);
+        hit = dlKeys.indexOf(data.election);//当たり番号
+        dlKeys.forEach(value => texts.push(value));
+        dlValues.forEach(function(value, index, array){array[index]=rouletteData.push(value*100)});
+        const newTexts = Array.from(new Set(texts));
+        const newRouletteData = Array.from(new Set(rouletteData));
+        console.log(newRouletteData);
         // const result = document.createElement('li');
         // result.textContent = data.value;
         // lotteryResult.appendChild(result);
     })
+    rouletteStart();
 }
 
 function showLoginMembers(member){
@@ -257,6 +385,9 @@ function ideaLogReceived(data){
 }
 
 function newIdeaAdded(data){
+    ideas.push({ ...data, grabbed: false });
+}
+function pastIdeaAdded(data){
     ideas.push({ ...data, grabbed: false });
 }
 

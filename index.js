@@ -7,6 +7,7 @@ mongoose.connect(MONGODB_URL, { useNewUrlParser: true });
 
 const ideaPost = mongoose.model("ideaPost", { idea: String, x: Number, y: Number, name: String, roomName: String });
 const willPost = mongoose.model("willPost", { will: Number, name: String, roomName: String });
+const lotteryResult = mongoose.model("lotteryResult", { hit: String, roomName: String });
 
 const express = require('express');
 const app = express();
@@ -78,7 +79,56 @@ io.on('connection', (socket) => {
         socket.join(room);
         console.log(member + "が" + room + "に入室しました!");
         members.add(member);
-        io.to(room).emit('login', member);
+        
+    socket.on('past idea', (login)=>{
+        ideaPost.exists({ roomName: room }, function(err, result) {
+            if (err) {
+                throw err
+                }
+                else{
+                    if(result!==null){
+                        ideaPost.find({ roomName: room }, function(err, result) {
+                            if (err) {
+                                throw err
+                                }
+                                else{
+                                    const data = result.map(i => i.idea);
+                                    const x = result.map(i => i.x);
+                                    const y = result.map(i => i.y);
+                                    const id = result.map(i => i.id);
+                                    const member = result.map(i => i.name);
+                                    for (var i = 0; i < data.length; i++) {
+                                        const idea = { idea: data[i], x: x[i], y: y[i], id: id[i], name: member[i], roomName: room };
+                                        ideas.set(idea.id, idea);
+                                        io.to(room).emit('past idea', idea);
+                                    }
+                                }
+                        });
+                    }
+                }
+        });
+    });
+        willPost.exists({ roomName: room }, { "_id" : 0, "will" : 1 }, function(err, result) {
+            if (err) {
+                throw err
+                }
+                else{
+                    if(result!==null){
+                        willPost.find({ roomName: room }, { "_id" : 0, "will" : 1 }, function(err, result) {
+                            if (err) {
+                                throw err
+                                }
+                                else{
+                                    const willBox = result;
+                                    const minWill = willBox.map(w => w.will).reduce((a,b)=>a<b?a:b)
+                                    console.log(minWill);
+                                    const loginData = { member, minWill };
+                                    io.to(room).emit('login', loginData);
+                                }
+                        });
+                    }
+                }
+        });
         
         socket.emit('login log', Array.from(members));
         socket.emit('idea log', Array.from(ideas.values()));
@@ -97,6 +147,7 @@ io.on('connection', (socket) => {
             const idea = { ...data, x, y, id: ideas.size, name: member, roomName: room }; // TODO: save idea in database
             ideaPost.create(idea);
             ideas.set(idea.id, idea);
+            console.log(idea.id, idea);
             io.to(room).emit('idea add', idea);
         })
 
@@ -122,7 +173,7 @@ io.on('connection', (socket) => {
             willPost.findOneAndUpdate(filter, update, options, function(err, result){
                 if(err) throw err;
                 console.log(result);
-            });
+            })
             console.log('データを作成しました')
             io.to(room).emit('will input', data);
         });
@@ -199,6 +250,8 @@ io.on('connection', (socket) => {
                                 }
                             }
                             console.log(election);//抽選結果
+                            const saveResult = { hit: election, roomName: room };
+                            lotteryResult.create(saveResult);
                             const lotteryData = { election, lot }
                             io.to(room).emit('lottery start', lotteryData);
                             //抽選結果をクライアントに送って、ルーレットの画面を出す
