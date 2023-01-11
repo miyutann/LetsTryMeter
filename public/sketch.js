@@ -61,9 +61,9 @@ function setup(){
         minWill = data.minWill;
         members.push(data.member);
         members.forEach(showLoginMembers);
-        const newIdeas = Array.from(
-            new Map(ideas.map((data) => [data.idea, data])).values()
-          );
+        // const newIdeas = Array.from(
+        //     new Map(ideas.map((data) => [data.idea, data])).values()
+        //   );
         console.log(newIdeas);
     })
 
@@ -94,7 +94,8 @@ function windowResized(){
 // Render data
 // ----------------------------------------------------------------------------
 
-const ideas = [];
+// const ideas = [];
+const ideas = new Map();
 let grabbed = null;
 
 function draw(){
@@ -213,7 +214,7 @@ function showRoulette(){
         text(newTexts[hit % newTexts.length]+"が選ばれました!", width/2, 0);
         pop();
         drawRoulette(stopTime - startTime, hit);
-        share();
+        // share();
       }
 }
 function drawRoulette(t, hit){ // t = アニメーション経過時間, hit = あたりの番号
@@ -282,8 +283,11 @@ function canvasClicked(){
 }
 
 function canvasMousePressed(){
-    for(let i = ideas.length - 1; i >= 0; i--){
-        const idea = ideas[i];
+    // for(let i = ideas.length - 1; i >= 0; i--){
+    //     const idea = ideas[i];
+    const reversed = Array.from(ideas.values()).reverse();
+    for(let i = reversed.length - 1; i >= 0; i--){
+        const idea = reversed[i];
         if(!idea.grabbed && isIdeaAt(idea, mouseX, mouseY)){
             idea.grabbed = true;
             grabbed = idea;
@@ -381,14 +385,17 @@ function loginLogReceived(data){
 }
 
 function ideaLogReceived(data){
-    data.forEach(idea => ideas.push(idea));
+    // data.forEach(idea => ideas.push(idea));
+    data.forEach(newIdeaAdded);
 }
 
 function newIdeaAdded(data){
-    ideas.push({ ...data, grabbed: false });
+    // ideas.push({ ...data, grabbed: false });
+    ideas.set(data.id, data);
 }
 function pastIdeaAdded(data){
-    ideas.push({ ...data, grabbed: false });
+    // ideas.push({ ...data, grabbed: false });
+    ideas.set(data.id, data);
 }
 
 const themes = ['gohan', 'asobi'];
@@ -411,7 +418,8 @@ themes.forEach((value)=>{
 
 
 function ideaMoved(data){
-    const target = ideas.find(idea => idea.id == data.id);
+    // const target = ideas.find(idea => idea.id == data.id);
+    const target = ideas.get(data.id);
     if(target){
         target.x = data.x;
         target.y = data.y;
@@ -420,7 +428,8 @@ function ideaMoved(data){
 }
 
 function ideaReleased(data){
-    const target = ideas.find(idea => idea.id == data.id);
+    // const target = ideas.find(idea => idea.id == data.id);
+    const target = ideas.get(data.id);
     if(target){
         target.grabbed = false;
         socket.emit('lottery ready', data);

@@ -54,12 +54,12 @@ io.on('connection', (socket) => {
         console.log(roomName);
         
 
-        io.of("/").adapter.on('create-room', (data) => {
-            // const rn = JSON.stringify(roomName);
-            roomName.textContent = data;
-            console.log(`room ${roomName} was created!`);
+        // io.of("/").adapter.on('create-room', (data) => {
+        //     // const rn = JSON.stringify(roomName);
+        //     roomName.textContent = data;
+        //     console.log(`room ${roomName} was created!`);
             
-          });
+        //   });
 
     })
 
