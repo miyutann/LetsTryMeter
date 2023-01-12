@@ -54,12 +54,12 @@ io.on('connection', (socket) => {
         console.log(roomName);
         
 
-        // io.of("/").adapter.on('create-room', (data) => {
-        //     // const rn = JSON.stringify(roomName);
-        //     roomName.textContent = data;
-        //     console.log(`room ${roomName} was created!`);
+        io.of("/").adapter.on('create-room', (data) => {
+            // const rn = JSON.stringify(roomName);
+            roomName.textContent = data;
+            console.log(`room ${roomName} was created!`);
             
-        //   });
+          });
 
     })
 
@@ -192,6 +192,12 @@ io.on('connection', (socket) => {
         });
 
         socket.on('lottery start', (m)=>{
+        willPost.exists({ roomName: room }, { "_id" : 0, "will" : 1 }, function(err, result) {
+            if (err) {
+            throw err
+            }
+            else{
+            if(result!==null){
             willPost.find({ roomName: room }, { "_id" : 0, "will" : 1 }, function(err, result) {
                 if (err) {
                     throw err
@@ -203,7 +209,13 @@ io.on('connection', (socket) => {
                         io.to(room).emit('lottery ready', minWill);
                         const willX = minWill;
                         const willY = 50;
-
+                        
+                ideaPost.exists({ roomName: room }, function(err, result) {
+                    if (err) {
+                    throw err
+                    }
+                    else{
+                    if(result!==null){
                         ideaPost.find({ roomName: room }, function(err, result) {
                             if(err) { throw err
                             }else{
@@ -259,13 +271,18 @@ io.on('connection', (socket) => {
                             }
                         
                         })
+                    }
+
+                }})
+                
                     
                     
                     }
                
                 })
+            }}
             });
-        
+        })
     });
 });
 

@@ -340,7 +340,7 @@ function willButtonClicked(e){
 }
 
 function lotteryButtonClicked(){
-    const msg = "抽選しました！";
+    const msg = "Let's Tryボタンを押したよ";
     console.log(msg);
     socket.emit('lottery start', msg);
     socket.on('lottery start', (data) => {
@@ -353,11 +353,12 @@ function lotteryButtonClicked(){
         const newTexts = Array.from(new Set(texts));
         const newRouletteData = Array.from(new Set(rouletteData));
         console.log(newRouletteData);
-        // const result = document.createElement('li');
-        // result.textContent = data.value;
-        // lotteryResult.appendChild(result);
+        
+        rouletteStart();
     })
-    rouletteStart();
+    if(state!==1){
+    window.alert("アイデアを入力するか、動かしてからボタンを押してください");  
+    }
 }
 
 function showLoginMembers(member){
