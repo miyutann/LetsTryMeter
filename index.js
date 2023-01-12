@@ -141,14 +141,15 @@ io.on('connection', (socket) => {
     
     // io.to(`${room}`).emit('login log', members);
 
-        socket.on('idea add', (data) => {
+        socket.on('idea add', async (data) => {
             const x = Math.random();
             const y = Math.random()
-            const idea = { ...data, x, y, id: ideas.size, name: member, roomName: room }; // TODO: save idea in database
-            ideaPost.create(idea);
-            ideas.set(idea.id, idea);
-            console.log(idea.id, idea);
-            io.to(room).emit('idea add', idea);
+            //const idea = { ...data, x, y, name: member, roomName: room };
+            const idea = await ideaPost.create({ ...data, x, y, name: member, roomName: room });
+            const o = { idea: idea.idea, x: idea.x, y: idea.y, name: idea.name, roomName: idea.roomName, id: idea.id };
+            console.log(o);
+            ideas.set(idea.id, o);
+            io.to(room).emit('idea add', o);
         })
 
         socket.on('idea move', (data) => {
