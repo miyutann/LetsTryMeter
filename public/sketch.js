@@ -64,7 +64,6 @@ function setup(){
         // const newIdeas = Array.from(
         //     new Map(ideas.map((data) => [data.idea, data])).values()
         //   );
-        console.log(newIdeas);
     })
 
 //----------------------
@@ -197,6 +196,14 @@ function showRoulette(){
         textAlign(CENTER, TOP);
         textSize(20);
         text("抽選中...", width/2, 0);
+        push();
+        textAlign(CENTER, TOP);
+        const x = width*4/5;
+        const y = height/2;
+        stroke(255, 204, 0);
+        fill(255, 204, 0);
+        triangle(x, y+10, x, y-10, x-20, y);
+        pop();
         pop();
         const t = millis();
         if(drawRoulette(t - startTime, hit)){
@@ -212,6 +219,14 @@ function showRoulette(){
         textAlign(CENTER, TOP);
         textSize(20);
         text(newTexts[hit % newTexts.length]+"が選ばれました!", width/2, 0);
+        push();
+        textAlign(CENTER, TOP);
+        const x = width*4/5;
+        const y = height/2;
+        stroke(255, 204, 0);
+        fill(255, 204, 0);
+        triangle(x, y+10, x, y-10, x-20, y);
+        pop();
         pop();
         drawRoulette(stopTime - startTime, hit);
         // share();
@@ -226,7 +241,7 @@ function drawRoulette(t, hit){ // t = アニメーション経過時間, hit = �
     push();
     textAlign(CENTER, CENTER);
     translate(width / 2, height / 2);
-    
+
     rotate(a);
     
     const hitSum = sumArray(newRouletteData.slice(0, hit));
@@ -344,6 +359,7 @@ function lotteryButtonClicked(){
     console.log(msg);
     socket.emit('lottery start', msg);
     socket.on('lottery start', (data) => {
+        if(data!==null){
         console.log(data.election);
         const dlKeys = Object.keys(data.lot);
         const dlValues = Object.values(data.lot);
@@ -355,10 +371,10 @@ function lotteryButtonClicked(){
         console.log(newRouletteData);
         
         rouletteStart();
+        // }else{
+        //     window.alert("アイデアを入力してね!");  
+        }
     })
-    if(state!==1){
-    window.alert("アイデアを入力するか、動かしてからボタンを押してください");  
-    }
 }
 
 function showLoginMembers(member){

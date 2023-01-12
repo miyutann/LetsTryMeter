@@ -54,12 +54,12 @@ io.on('connection', (socket) => {
         console.log(roomName);
         
 
-        io.of("/").adapter.on('create-room', (data) => {
-            // const rn = JSON.stringify(roomName);
-            roomName.textContent = data;
-            console.log(`room ${roomName} was created!`);
+        // io.of("/").adapter.on('create-room', (data) => {
+        //     // const rn = JSON.stringify(roomName);
+        //     roomName.textContent = data;
+        //     console.log(`room ${roomName} was created!`);
             
-          });
+        //   });
 
     })
 
@@ -267,11 +267,12 @@ io.on('connection', (socket) => {
                             lotteryResult.create(saveResult);
                             const lotteryData = { election, lot }
                             io.to(room).emit('lottery start', lotteryData);
-                            //抽選結果をクライアントに送って、ルーレットの画面を出す
-                            
+                            //抽選結果をクライアントに送って、ルーレットの画面を出す  
                             }
                         
                         })
+                    }else{
+                        io.to(room).emit('lottery start', null);
                     }
 
                 }})
