@@ -21,7 +21,7 @@ const { Server } = require('socket.io');
 const io = new Server(server);
 
 app.get('/', (req, res) => {
-    res.render('index');
+    res.render('rooms');
 });
 app.get('/rooms', (req, res) =>{
     res.render('rooms');
