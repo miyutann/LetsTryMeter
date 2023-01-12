@@ -93,7 +93,6 @@ function windowResized(){
 // Render data
 // ----------------------------------------------------------------------------
 
-// const ideas = [];
 const ideas = new Map();
 let grabbed = null;
 
@@ -297,9 +296,7 @@ function canvasClicked(){
 
 }
 
-function canvasMousePressed(){
-    // for(let i = ideas.length - 1; i >= 0; i--){
-    //     const idea = ideas[i];
+function canvasMousePressed() {
     const reversed = Array.from(ideas.values()).reverse();
     for(let i = reversed.length - 1; i >= 0; i--){
         const idea = reversed[i];
@@ -402,16 +399,13 @@ function loginLogReceived(data){
 }
 
 function ideaLogReceived(data){
-    // data.forEach(idea => ideas.push(idea));
     data.forEach(newIdeaAdded);
 }
 
 function newIdeaAdded(data){
-    // ideas.push({ ...data, grabbed: false });
     ideas.set(data.id, data);
 }
 function pastIdeaAdded(data){
-    // ideas.push({ ...data, grabbed: false });
     ideas.set(data.id, data);
 }
 
@@ -435,7 +429,6 @@ themes.forEach((value)=>{
 
 
 function ideaMoved(data){
-    // const target = ideas.find(idea => idea.id == data.id);
     const target = ideas.get(data.id);
     if(target){
         target.x = data.x;
@@ -445,13 +438,9 @@ function ideaMoved(data){
 }
 
 function ideaReleased(data){
-    // const target = ideas.find(idea => idea.id == data.id);
     const target = ideas.get(data.id);
     if(target){
         target.grabbed = false;
         socket.emit('lottery ready', data);
     }
 }
-
-
-
