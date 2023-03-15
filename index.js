@@ -1,6 +1,6 @@
 const port = process.env.PORT || 3000;
 
-const MONGODB_URL = "mongodb+srv://rin-co:2525rinko@cluster0.rypsris.mongodb.net/?retryWrites=true&w=majority";
+const MONGODB_URL = process.env.MONGODB_URL;
 const e = require('express');
 const mongoose = require("mongoose");
 mongoose.connect(MONGODB_URL, { useNewUrlParser: true });
