@@ -45,7 +45,7 @@ function setup(){
     slider = document.getElementById("willSlider");
 
     socket = io();
-    socket.on('past idea', pastIdeaAdded);
+    // socket.on('past idea', pastIdeaAdded);
     socket.on('idea log', ideaLogReceived);
     socket.on('idea add', newIdeaAdded);
     socket.on('idea move', ideaMoved);
@@ -54,16 +54,12 @@ function setup(){
 
     const userName = window.prompt("名前を入力してください");
     socket.emit('login', { roomName, userName });
-    socket.emit('past idea', userName);
 
     socket.on('login', (data) => {
         console.log(data.member + "が参加しました!");
         minWill = data.minWill;
         members.push(data.member);
         members.forEach(showLoginMembers);
-        // const newIdeas = Array.from(
-        //     new Map(ideas.map((data) => [data.idea, data])).values()
-        //   );
     })
 
 //----------------------
@@ -338,16 +334,7 @@ function willButtonClicked(e){
     const will = slider.value;
     //スライダーを動かせないようにしたい
     socket.emit('will input', will);
-    socket.on('will input', (data) => {
-        // var parent = document.querySelector('.justify-content-start list-inline');
-        // var target = document.querySelector('.list-inline-item');
-        // parent.removeChild(target);
-        // console.log(will);
-        // const w = document.createElement('li');
-        // w.className = 'list-inline-item';
-        // w.textContent = will;
-        // willInput.appendChild(w);
-    })
+
     // lotteryButton = false;
 }
 

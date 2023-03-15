@@ -1,11 +1,21 @@
 const port = process.env.PORT || 3000;
 
 const MONGODB_URL = process.env.MONGODB_URL;
-const e = require('express');
 const mongoose = require("mongoose");
 mongoose.connect(MONGODB_URL, { useNewUrlParser: true });
 
-const ideaPost = mongoose.model("ideaPost", { idea: String, x: Number, y: Number, name: String, roomName: String });
+// Database options
+const options = {
+    timestamps: true, // add timestamp
+    toJSON: { // change the way how data is converted to JSON
+        virtuals: true,
+        versionKey: false,
+        transform: (_, ret) => { delete ret._id; return ret; }
+    } 
+};
+
+const ideaSchema = mongoose.Schema({ idea: String, x: Number, y: Number, name: String, roomName: String }, options)
+const ideaPost = mongoose.model("ideaPost", ideaSchema);
 const willPost = mongoose.model("willPost", { will: Number, name: String, roomName: String });
 const lotteryResult = mongoose.model("lotteryResult", { hit: String, roomName: String });
 
@@ -32,108 +42,63 @@ const allIdeas = new Map();
 const allMembers = new Map();
 const rooms = new Set();
 
+async function setupRoom(roomName) {
+    if (rooms.has(roomName)) return false;
+    rooms.add(roomName);
+    const members = new Set();
+    allMembers.set(roomName, members);
+    const ideas = new Map();
+    allIdeas.set(roomName, ideas);
+    try {
+        const pastIdeas = await ideaPost.find({ roomName });
+        pastIdeas.forEach(idea => ideas.set(idea.id, idea));
+    } catch (e) { console.error(e); }
+    return true;
+}
+
 io.on('connection', (socket) => {
     console.log('A user connected');
-    
-    // const fetchUserId = 
-    // const userId = fetchUserId(socket);
-    // socket.join(userId);
-    // io.to(userId).emit("hi");
 
     socket.on('room add', (roomName) => {
-        if (!rooms.has(roomName)) {
-            rooms.add(roomName);
-            socket.emit('room add', roomName);    
+        if (setupRoom(roomName)) {
+            socket.emit('room add', roomName);
         }
     })
 
-    socket.on('login', (data) => {
+    socket.on('login', async (data) => {
         const member = data.userName;
         const room = data.roomName;
-        let members = allMembers.get(room);
-        if(!members){
-            members = new Set();
-            allMembers.set(room, members);
-        }
-        let ideas = allIdeas.get(room);
-        if(!ideas){
-            ideas = new Map();
-            allIdeas.set(room, ideas);
-        }
+
+        setupRoom(room);
+        const members = allMembers.get(room);
+        const ideas = allIdeas.get(room);
+
         socket.join(room);
         console.log(member + "が" + room + "に入室しました!");
-        members.add(member);
-        
-    socket.on('past idea', (login)=>{
-        ideaPost.exists({ roomName: room }, function(err, result) {
-            if (err) {
-                throw err
-                }
-                else{
-                    if(result!==null){
-                        ideaPost.find({ roomName: room }, function(err, result) {
-                            if (err) {
-                                throw err
-                                }
-                                else{
-                                    const data = result.map(i => i.idea);
-                                    const x = result.map(i => i.x);
-                                    const y = result.map(i => i.y);
-                                    const id = result.map(i => i.id);
-                                    const member = result.map(i => i.name);
-                                    for (var i = 0; i < data.length; i++) {
-                                        const idea = { idea: data[i], x: x[i], y: y[i], id: id[i], name: member[i], roomName: room };
-                                        ideas.set(idea.id, idea);
-                                        io.to(room).emit('past idea', idea);
-                                    }
-                                }
-                        });
-                    }
-                }
-        });
-    });
-        willPost.exists({ roomName: room }, { "_id" : 0, "will" : 1 }, function(err, result) {
-            if (err) {
-                throw err
-                }
-                else{
-                    if(result!==null){
-                        willPost.find({ roomName: room }, { "_id" : 0, "will" : 1 }, function(err, result) {
-                            if (err) {
-                                throw err
-                                }
-                                else{
-                                    const willBox = result;
-                                    const minWill = willBox.map(w => w.will).reduce((a,b)=>a<b?a:b)
-                                    console.log(minWill);
-                                    const loginData = { member, minWill };
-                                    io.to(room).emit('login', loginData);
-                                }
-                        });
-                    }
-                }
-        });
+
+        try {            
+            const wills = await willPost.find({ roomName: room });
+            const minWill = wills.length > 0 ? wills.map(w => w.will).reduce((a, b) => a < b ? a : b) : 1;
+            const loginData = { member, minWill };
+            console.log(minWill);
+            io.to(room).emit('login', loginData);
+        } catch (e) { console.error(e); }
         
         socket.emit('login log', Array.from(members));
         socket.emit('idea log', Array.from(ideas.values()));
 
         socket.on('disconnect', () => {
-
             console.log('A user disconnected');
-            
         });
     
-    // io.to(`${room}`).emit('login log', members);
-
         socket.on('idea add', async (data) => {
             const x = Math.random();
             const y = Math.random()
-            //const idea = { ...data, x, y, name: member, roomName: room };
-            const idea = await ideaPost.create({ ...data, x, y, name: member, roomName: room });
-            const o = { idea: idea.idea, x: idea.x, y: idea.y, name: idea.name, roomName: idea.roomName, id: idea.id };
-            console.log(o);
-            ideas.set(idea.id, o);
-            io.to(room).emit('idea add', o);
+            try {
+                const idea = await ideaPost.create({ ...data, x, y, name: member, roomName: room });
+                ideas.set(idea.id, idea);
+                io.to(room).emit('idea add', idea);
+            } catch (e) { console.error(e); }
         })
 
         socket.on('idea move', (data) => {
