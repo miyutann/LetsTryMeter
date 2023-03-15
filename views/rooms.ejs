@@ -9,17 +9,17 @@
     </head>
     <body class="container p-1">
         <h1>ルーム一覧</h1>
-        <!-- <div id="p5container" class="my-3"></div> -->
-        <div>
-        ここに既にあるルームを表示
-        <a href="/rooms/rokko">rokko</a>
-        
-        </div>
+        <ul id="rooms" class="my-3">
+        <% rooms.forEach(r => { %>
+            <li><a href="/rooms/<%= r %>"><%= r %></a></li>
+        <% }) %>
+        </ul>
 
-    <form id="roomForm" class="input-group">
-        <input id="roomNameInput" type="text" class="form-control" placeholder="新しいルーム名">
-        <button class="btn btn-primary" type="submit">作成</button>
-    </form>
+        <h2>新規ルーム作成</h2>
+        <form id="roomForm" class="input-group">
+            <input id="roomNameInput" type="text" class="form-control" placeholder="新しいルーム名">
+            <button class="btn btn-primary" type="submit">作成</button>
+        </form>
 
         <script src="/socket.io/socket.io.js"></script>
         <script src="/rooms.js"></script>

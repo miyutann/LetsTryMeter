@@ -20,26 +20,17 @@ const server = http.createServer(app);
 const { Server } = require('socket.io');
 const io = new Server(server);
 
-app.get('/', (req, res) => {
-    res.render('rooms');
+app.get(['/', '/rooms'], (req, res) => {
+    res.render('rooms', { rooms });
 });
-app.get('/rooms', (req, res) =>{
-    res.render('rooms');
-});
+
 app.get('/rooms/:name', (req, res) => {
     res.render('index', { name: req.params.name })
 });
-//res.render("rooms", { createdRooms: rooms });
-//(rooms.ejs内で↓)
-// <% createdRooms.forEach(rooms => {
-//   <h5><%= room.roomId %></h5>
-// <% }); %>
 
-// const ideas = [];
-// const members = new Set();
 const allIdeas = new Map();
 const allMembers = new Map();
-
+const rooms = new Set();
 
 io.on('connection', (socket) => {
     console.log('A user connected');
@@ -49,18 +40,11 @@ io.on('connection', (socket) => {
     // socket.join(userId);
     // io.to(userId).emit("hi");
 
-    socket.on('room add', (roomName) =>{
-        socket.emit('room add', roomName);
-        console.log(roomName);
-        
-
-        // io.of("/").adapter.on('create-room', (data) => {
-        //     // const rn = JSON.stringify(roomName);
-        //     roomName.textContent = data;
-        //     console.log(`room ${roomName} was created!`);
-            
-        //   });
-
+    socket.on('room add', (roomName) => {
+        if (!rooms.has(roomName)) {
+            rooms.add(roomName);
+            socket.emit('room add', roomName);    
+        }
     })
 
     socket.on('login', (data) => {
