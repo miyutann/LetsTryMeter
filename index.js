@@ -76,7 +76,7 @@ io.on('connection', (socket) => {
         socket.join(room);
         console.log(member + "が" + room + "に入室しました!");
 
-        try {            
+        try {
             const wills = await willPost.find({ roomName: room });
             const minWill = wills.length > 0 ? wills.map(w => w.will).reduce((a, b) => a < b ? a : b) : 1;
             const loginData = { member, minWill };
@@ -104,7 +104,7 @@ io.on('connection', (socket) => {
         socket.on('idea move', (data) => {
             // TODO: check data is inside
             const idea = ideas.get(data.id);
-            if(idea){
+            if (idea) {
                 idea.x = data.x;
                 idea.y = data.y;
                 io.to(room).emit('idea move', data);
@@ -120,8 +120,8 @@ io.on('connection', (socket) => {
             const filter = { name: member, roomName: room };
             const update = { will };
             const options = { new: true, upsert: true };
-            willPost.findOneAndUpdate(filter, update, options, function(err, result){
-                if(err) throw err;
+            willPost.findOneAndUpdate(filter, update, options, function (err, result) {
+                if (err) throw err;
                 console.log(result);
             })
             console.log('データを作成しました')
@@ -135,108 +135,63 @@ io.on('connection', (socket) => {
             const filter = { idea: idea, roomName: room };
             const update = { x, y };
             const options = { new: true, upsert: true };
-            ideaPost.findOneAndUpdate(filter, update, options, function(err, result){
-                if(err) throw err;
+            ideaPost.findOneAndUpdate(filter, update, options, function (err, result) {
+                if (err) throw err;
                 console.log(result);
             })//座標位置を保存
         });
 
-        socket.on('lottery start', (m)=>{
-        willPost.exists({ roomName: room }, { "_id" : 0, "will" : 1 }, function(err, result) {
-            if (err) {
-            throw err
-            }
-            else{
-            if(result!==null){
-            willPost.find({ roomName: room }, { "_id" : 0, "will" : 1 }, function(err, result) {
-                if (err) {
-                    throw err
-                    }
-                    else{
-                        const willBox = result;
-                        const minWill = willBox.map(w => w.will).reduce((a,b)=>a<b?a:b)
-                        // console.log(minWill);
-                        io.to(room).emit('lottery ready', minWill);
-                        const willX = minWill;
-                        const willY = 50;
-                        
-                ideaPost.exists({ roomName: room }, function(err, result) {
-                    if (err) {
-                    throw err
-                    }
-                    else{
-                    if(result!==null){
-                        ideaPost.find({ roomName: room }, function(err, result) {
-                            if(err) { throw err
-                            }else{
-                            const xOfAllIdeas = result.map(w => w.x);//アイデアのx座標（配列）
-                            const yOfAllIdeas = result.map(w => w.y);//アイデアのy座標（配列）
-                            xOfAllIdeas.forEach(function(value, index, array){array[index]=(value*100-willX)**2});
-                            yOfAllIdeas.forEach(function(value, index, array){array[index]=(value*100-willY)**2});
-                            function func(...arr){
-                                let ret_arr = arr[0].slice();
-                                for(let i=1;i<arr.length;i++){
-                                    for(let j=0; j<arr[i].length; j++)ret_arr[j] += arr[i][j];
-                                }
-                                return ret_arr;  
-                            }
-                            const ideaD = func(xOfAllIdeas,yOfAllIdeas);
-                            ideaD.forEach(function(value, index, array){array[index]=1/Math.sqrt(value)});// 1/3,1/4(距離分の1)
-                            const totalD = ideaD.reduce(function(sum, element){
-                                return sum + element;
-                              }, 0);// 1/3+1/4(距離分の1の合計)
-                            // ideaD.forEach(function(value, index, array){array[index]=Math.floor(value/totalD*100)});
-                            ideaD.forEach(function(value, index, array){array[index]=value/totalD});
-                            const ideaBox = result.map(w => w.idea);
-                            const p = ideaD;//当選確率
-                            var lot = p.reduce((value, index, array) => {
-                                value[ideaBox[array]] = index;
-                                return value;
-                            }, {});
-                            const array = Object.keys(lot).map((k)=>({ key: k, value: lot[k] }));
-                            array.sort((a, b) => a.value - b.value);
-                            lot = Object.assign({}, ...array.map((item) => ({
-                            [item.key]: item.value,
-                            })));
-                            console.log(lot);
-                            //   昇順に並び替えた
-                            // var number = Math.floor(Math.random()*100);
-                            var number = Math.random();
-                            var weight = 0;
-                            var election = "";
-                            for(var key in lot){
-                                weight += lot[key]; //すき焼き:0.1、焼肉:0.5、しゃぶしゃぶ:1
-                                if(number < weight){
-                                election = key;
-                                break;
-                                }
-                            }
-                            console.log(election);//抽選結果
-                            const saveResult = { hit: election, roomName: room };
-                            lotteryResult.create(saveResult);
-                            const lotteryData = { election, lot }
-                            io.to(room).emit('lottery start', lotteryData);
-                            //抽選結果をクライアントに送って、ルーレットの画面を出す  
-                            }
-                        
-                        })
-                    }else{
-                        io.to(room).emit('lottery start', null);
-                    }
+        socket.on('lottery start', async (m) => {
+            try {
+                const wills = await willPost.find({ roomName: room });
+                if (wills.length == 0) {
+                    return;
+                }
+                const minWill = wills.map(w => w.will).reduce((a, b) => a < b ? a : b);
+                io.to(room).emit('lottery ready', minWill);
+                const willX = minWill;
+                const willY = 50;
 
-                }})
-                
-                    
-                    
-                    }
-               
-                })
-            }}
-            });
-        })
+                const ideas = await ideaPost.find({ roomName: room });
+                if (ideas.length == 0) {
+                    io.to(room).emit('lottery start', null);
+                    return;
+                }
+                const result = doLottery(ideas, willX, willY);
+                console.log(result);
+                if (result) {
+                    const hit = result.lottery[result.selectedIndex].idea;
+                    lotteryResult.create({ hit, roomName: room });
+                    io.to(room).emit('lottery start', result);
+                }
+            } catch (e) { console.error(e) }
+        });
     });
-});
+})
 
+function distance(x1, y1, x2, y2) {
+    return Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
+}
+
+function doLottery(ideas, willX, willY) {
+    // Step 1: for each idea, calculate 1 / distance. distance = (x * 100, y * 100) and (willX, willY)
+    const ideaP = ideas.map(p => ({ idea: p.idea, p: 1 / distance(p.x * 100, p.y * 100, willX, willY) }));
+
+    // Step 2: for each idea, caluculate lottery probability
+    const total = ideaP.reduce((sum, element) => sum + element.p, 0);
+    const lottery = ideaP.map(p => ({ idea: p.idea, p: p.p / total }));
+    lottery.sort((a, b) => a.p - b.p); // sort by probability
+
+    // Step 3: do lottery
+    const threshold = Math.random();
+    let sum = 0;
+    for (let i = 0; i < lottery.length; i++){
+        const l = lottery[i];
+        sum += l.p;
+        if (sum > threshold) return { selectedIndex: i, lottery };
+    }
+    return null;
+}
 
 server.listen(port, () => {
     console.log('Server listening on port:'  + port);
