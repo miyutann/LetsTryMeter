@@ -11,7 +11,7 @@ const options = {
         virtuals: true,
         versionKey: false,
         transform: (_, ret) => { delete ret._id; return ret; }
-    } 
+    }
 };
 
 const ideaSchema = mongoose.Schema({ idea: String, x: Number, y: Number, name: String, roomName: String }, options)
@@ -83,14 +83,14 @@ io.on('connection', (socket) => {
             console.log(minWill);
             io.to(room).emit('login', loginData);
         } catch (e) { console.error(e); }
-        
+
         socket.emit('login log', Array.from(members));
         socket.emit('idea log', Array.from(ideas.values()));
 
         socket.on('disconnect', () => {
             console.log('A user disconnected');
         });
-    
+
         socket.on('idea add', async (data) => {
             const x = Math.random();
             const y = Math.random()
@@ -102,46 +102,40 @@ io.on('connection', (socket) => {
         })
 
         socket.on('idea move', (data) => {
-            // TODO: check data is inside
+            if (!data) return;
             const idea = ideas.get(data.id);
-            if (idea) {
-                idea.x = data.x;
-                idea.y = data.y;
-                io.to(room).emit('idea move', data);
-                //ideaが動いたことをデータベースに保存する
-            }
+            if (!idea) return;
+            idea.x = data.x;
+            idea.y = data.y;
+            io.to(room).emit('idea move', data);
         });
 
-        socket.on('idea released', (data) => {
+        socket.on('idea released', async (data) => {
+            if (!data) return;
+            const idea = ideas.get(data.id);
+            if (!idea) return;
+            idea.x = data.x;
+            idea.y = data.y;
             io.to(room).emit('idea released', data);
+
+            const update = { x: data.x, y: data.y };
+            const options = { new: true, upsert: true };
+            try {
+                console.log(await ideaPost.findByIdAndUpdate(data.id, update, options));                
+            } catch (e) { console.error(e); }
         });
 
-        socket.on('will input', (will) => {
+        socket.on('will input', async (will) => {
             const filter = { name: member, roomName: room };
             const update = { will };
             const options = { new: true, upsert: true };
-            willPost.findOneAndUpdate(filter, update, options, function (err, result) {
-                if (err) throw err;
-                console.log(result);
-            })
-            console.log('データを作成しました')
-            io.to(room).emit('will input', data);
-        });
-            
-        socket.on('lottery ready', (data) => {
-            const x = data.x;
-            const y = data.y;
-            const idea = data.idea;
-            const filter = { idea: idea, roomName: room };
-            const update = { x, y };
-            const options = { new: true, upsert: true };
-            ideaPost.findOneAndUpdate(filter, update, options, function (err, result) {
-                if (err) throw err;
-                console.log(result);
-            })//座標位置を保存
+            try {
+                const data = await willPost.findOneAndUpdate(filter, update, options);
+                io.to(room).emit('will input', data);                    
+            } catch (e) { console.error(e); }
         });
 
-        socket.on('lottery start', async (m) => {
+        socket.on('lottery start', async () => {
             try {
                 const wills = await willPost.find({ roomName: room });
                 if (wills.length == 0) {
@@ -185,7 +179,7 @@ function doLottery(ideas, willX, willY) {
     // Step 3: do lottery
     const threshold = Math.random();
     let sum = 0;
-    for (let i = 0; i < lottery.length; i++){
+    for (let i = 0; i < lottery.length; i++) {
         const l = lottery[i];
         sum += l.p;
         if (sum > threshold) return { selectedIndex: i, lottery };
@@ -194,5 +188,5 @@ function doLottery(ideas, willX, willY) {
 }
 
 server.listen(port, () => {
-    console.log('Server listening on port:'  + port);
+    console.log('Server listening on port:' + port);
 });
