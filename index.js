@@ -28,7 +28,12 @@ const http = require('http');
 const server = http.createServer(app);
 
 const { Server } = require('socket.io');
-const io = new Server(server);
+
+const io = new Server(server, {
+    cors: {
+      origin: "https://letstrymeter.adaptable.app/"
+    }
+});
 
 app.get(['/', '/rooms'], (req, res) => {
     res.render('rooms', { rooms });
@@ -73,6 +78,7 @@ io.on('connection', (socket) => {
         const members = allMembers.get(room);
         const ideas = allIdeas.get(room);
 
+        members.add(member);
         socket.join(room);
         console.log(member + "が" + room + "に入室しました!");
 
@@ -80,7 +86,6 @@ io.on('connection', (socket) => {
             const wills = await willPost.find({ roomName: room });
             const minWill = wills.length > 0 ? wills.map(w => w.will).reduce((a, b) => a < b ? a : b) : 1;
             const loginData = { member, minWill };
-            console.log(minWill);
             io.to(room).emit('login', loginData);
         } catch (e) { console.error(e); }
 
@@ -121,7 +126,7 @@ io.on('connection', (socket) => {
             const update = { x: data.x, y: data.y };
             const options = { new: true, upsert: true };
             try {
-                console.log(await ideaPost.findByIdAndUpdate(data.id, update, options));                
+                await ideaPost.findByIdAndUpdate(data.id, update, options);
             } catch (e) { console.error(e); }
         });
 
@@ -131,7 +136,7 @@ io.on('connection', (socket) => {
             const options = { new: true, upsert: true };
             try {
                 const data = await willPost.findOneAndUpdate(filter, update, options);
-                io.to(room).emit('will input', data);                    
+                io.to(room).emit('will input', data);
             } catch (e) { console.error(e); }
         });
 

@@ -41,6 +41,7 @@ function setup() {
     socket.on('idea move', ideaMoved);
     socket.on('idea released', ideaReleased);
     socket.on('login log', loginLogReceived);
+    socket.on('will input', willInputReceived);
 
     const userName = window.prompt("名前を入力してください");
     socket.emit('login', { roomName, userName });
@@ -180,7 +181,6 @@ function showRoulette() {
 
 function drawRoulette(t, hit) { // t = アニメーション経過時間, hit = あたりの番号
     const lottery = lotteryData.lottery;
-    console.log(lotteryData);
     const a = log(t) * 10;
 
     push();
@@ -306,7 +306,6 @@ function showLoginMembers(member) {
     console.log(member);
     const mid = "member-" + member;
     let u = document.getElementById(mid);
-    console.log(u);
     if (!u) {
         u = document.createElement('li');
         u.className = 'list-inline-item';
@@ -368,5 +367,12 @@ function ideaReleased(data) {
     const target = ideas.get(data.id);
     if (target) {
         target.grabbed = false;
+    }
+}
+
+function willInputReceived(data) {
+    will = data.will;
+    if(will < minWill) {
+        minWill = will;
     }
 }
