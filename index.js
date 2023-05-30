@@ -1,4 +1,5 @@
 const port = process.env.PORT || 3000;
+こと
 
 const MONGODB_URL = process.env.MONGODB_URL;
 const mongoose = require("mongoose");
