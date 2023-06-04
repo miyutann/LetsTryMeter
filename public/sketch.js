@@ -83,7 +83,7 @@ function drawMarker(will) {
     push();
     textSize(50);
 
-    const marker = "🔥";
+    const marker = "★";
     const markerX = (width - textWidth(marker)) / 100 * will;
     const minWillX = (width - textWidth(marker)) / 100 * minWill;
 
@@ -152,6 +152,8 @@ function drawArrow() {
     line(width - 65, 215, width - 50, 200);
     line(width - 65, 185, width - 50, 200);
     textSize(13);
+    text("0%", 10,180);
+    text("100%", width-50,180);
     text("High →", width * 0.5, 20);
     text("← Low", width * 0.5 - 80, 20);
     pop();
