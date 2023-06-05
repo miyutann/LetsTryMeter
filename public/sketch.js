@@ -337,9 +337,9 @@ function pastIdeaAdded(data) {
     ideas.set(data.id, data);
 }
 
-const themes = ['gohan', 'asobi'];
-const gohan = ["美味しいシュウマイ", "回転寿司", "お好み焼き"];
-const asobi = ["ユニバ", "プラネタリウム", "岩盤浴"];
+const themes = ['gohan', 'animal'];
+const gohan = ["美味しいシュウマイ", "マシュマロ", "お好み焼き","カルビ","和風パスタ","かりんとう"];
+const animal = ["えぞりす", "きたきつね", "しまりす","たんぽぽ","かたばみ","つきのわぐま"];
 const output = document.getElementById('ideaText');
 themes.forEach((value) => {
     const getTheme = document.getElementById(value);
@@ -348,8 +348,8 @@ themes.forEach((value) => {
         if (text == "ご飯🍚") {
             const randomG = gohan[Math.floor(Math.random() * gohan.length)];
             output.value = randomG;
-        } else if (text == "遊び🎡") {
-            const randomA = asobi[Math.floor(Math.random() * asobi.length)];
+        } else if (text == "生き物🐁") {
+            const randomA = animal[Math.floor(Math.random() * animal.length)];
             output.value = randomA;
         }
     })
