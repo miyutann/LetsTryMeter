@@ -338,8 +338,8 @@ function pastIdeaAdded(data) {
 }
 
 const themes = ['gohan', 'animal'];
-const gohan = ["美味しいシュウマイ", "マシュマロ", "お好み焼き","カルビ","和風パスタ","かりんとう"];
-const animal = ["えぞりす", "きたきつね", "しまりす","たんぽぽ","かたばみ","つきのわぐま"];
+const gohan = ["美味しいシュウマイ", "マシュマロ", "お好み焼き","カルビ","和風パスタ","かりんとう","えだまめしか勝たん", "ピーマン","ハンバーグ"];
+const animal = ["えぞりす", "きたきつね", "しまりす","たんぽぽ","かたばみ","つきのわぐま","ウーバールーパー","ハイエナ","ディンゴ"];
 const output = document.getElementById('ideaText');
 themes.forEach((value) => {
     const getTheme = document.getElementById(value);
