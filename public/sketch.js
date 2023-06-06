@@ -3,9 +3,9 @@ let socket;
 const ideaForm = document.getElementById('ideaForm');
 const ideaText = document.getElementById('ideaText');
 const ideaButton = document.getElementById('ideaButton');
-const willButton = document.getElementById('willButton');
-const lotteryButton = document.getElementById('lotteryButton');
-const lotteryResult = document.getElementById('lotteryResult');
+// const willButton = document.getElementById('willButton');
+// const lotteryButton = document.getElementById('lotteryButton');
+// const lotteryResult = document.getElementById('lotteryResult');
 const willInput = document.getElementById('usersInput');
 const joinedMembers = document.getElementById('members');
 const slider = document.getElementById("willSlider");
@@ -81,22 +81,22 @@ function draw() {
 
 function drawMarker(will) {
     push();
-    textSize(50);
+    // textSize(50);
 
-    const marker = "★";
-    const markerX = (width - textWidth(marker)) / 100 * will;
-    const minWillX = (width - textWidth(marker)) / 100 * minWill;
+    // const marker = "";
+    // const markerX = (width - textWidth(marker)) / 100 * will;
+    // const minWillX = (width - textWidth(marker)) / 100 * minWill;
 
-    text(marker, markerX, 215);
-    if(minWill) text(marker, minWillX, 215);
+    // text(marker, markerX, 215);
+    // if(minWill) text(marker, minWillX, 215);
 
-    textSize(13);
-    text(`あなた`, markerX + 15, 170);
-    text(`${will}%`, markerX + 20, 235);
-    if (minWill) {
-        text("メンバー最小値", minWillX - 35, 170);
-        text(`${minWill}%`, minWillX - 5, 235);            
-    }
+    // textSize(13);
+    // text(`あなた`, markerX + 15, 170);
+    // text(`${will}%`, markerX + 20, 235);
+    // if (minWill) {
+    //     text("メンバー最小値", minWillX - 35, 170);
+    //     text(`${minWill}%`, minWillX - 5, 235);            
+    // }
 
     pop();
 }
@@ -161,87 +161,87 @@ function drawArrow() {
 
 function showRoulette() {
     push();
-    textAlign(CENTER, TOP);
-    textSize(20);
+    // textAlign(CENTER, TOP);
+    // textSize(20);
 
-    if (state == 1) {
-        const t = millis();
-        if (drawRoulette(t - startTime, lotteryData.selectedIndex)) {
-            stopTime = t;
-            state = 2;
-        }
-        text("抽選中...", width * 0.5, 0);
-    }
-    else if (state == 2) {
-        drawRoulette(stopTime - startTime, lotteryData.selectedIndex);
-        text(selectedIdea() + "が選ばれました!", width * 0.5, 0);
-        // share();
-    }
+    // if (state == 1) {
+    //     const t = millis();
+    //     if (drawRoulette(t - startTime, lotteryData.selectedIndex)) {
+    //         stopTime = t;
+    //         state = 2;
+    //     }
+    //     text("抽選中...", width * 0.5, 0);
+    // }
+    // else if (state == 2) {
+    //     drawRoulette(stopTime - startTime, lotteryData.selectedIndex);
+    //     text(selectedIdea() + "が選ばれました!", width * 0.5, 0);
+    //     // share();
+    // }
 
     pop();
 }
 
 function drawRoulette(t, hit) { // t = アニメーション経過時間, hit = あたりの番号
-    const lottery = lotteryData.lottery;
-    const a = log(t) * 10;
+    // const lottery = lotteryData.lottery;
+    // const a = log(t) * 10;
 
     push();
-    fill(255);
-    rect(0, 0, width, height);
+    // fill(255);
+    // rect(0, 0, width, height);
 
-    stroke(255, 204, 0);
-    fill(255, 204, 0);
-    const x = width * 0.8;
-    const y = height * 0.5;
-    triangle(x, y + 10, x, y - 10, x - 20, y);
+    // stroke(255, 204, 0);
+    // fill(255, 204, 0);
+    // const x = width * 0.8;
+    // const y = height * 0.5;
+    // triangle(x, y + 10, x, y - 10, x - 20, y);
 
-    textAlign(CENTER, CENTER);
-    translate(width / 2, height / 2);
+    // textAlign(CENTER, CENTER);
+    // translate(width / 2, height / 2);
 
-    rotate(a);
+    // rotate(a);
 
-    const hitSum = sumArray(lottery.slice(0, hit).map(l => l.p));
-    const hitA = (TWO_PI * hitSum + a) % TWO_PI;
-    const hitRange = TWO_PI * lottery[hit].p;
-    const shouldStop = t > 5000 && (hitA > TWO_PI - hitRange / 2);
+    // const hitSum = sumArray(lottery.slice(0, hit).map(l => l.p));
+    // const hitA = (TWO_PI * hitSum + a) % TWO_PI;
+    // const hitRange = TWO_PI * lottery[hit].p;
+    // const shouldStop = t > 5000 && (hitA > TWO_PI - hitRange / 2);
 
-    for (let i = 0; i < lottery.length; i++) {
-        const p = TWO_PI * lottery[i].p / 2;
-        rotate(p);
-        stroke("#6c757d");
-        fill(shouldStop && i == hit ? "#dc3545" : 255);
-        arc(0, 0, 300, 300, -p, p, PIE);
+    // for (let i = 0; i < lottery.length; i++) {
+    //     const p = TWO_PI * lottery[i].p / 2;
+    //     rotate(p);
+    //     stroke("#6c757d");
+    //     fill(shouldStop && i == hit ? "#dc3545" : 255);
+    //     arc(0, 0, 300, 300, -p, p, PIE);
 
-        noStroke();
-        fill(0);
-        text(lottery[i].idea, 100, 0);
-        rotate(p);
-    }
+    //     noStroke();
+    //     fill(0);
+    //     text(lottery[i].idea, 100, 0);
+    //     rotate(p);
+    // }
 
     pop();
 
-    return shouldStop; // returns true if animation should stop
+    // return shouldStop; // returns true if animation should stop
 }
 
 function selectedIdea() {
-    return lotteryData ? lotteryData.lottery[lotteryData.selectedIndex].idea : "";
+    // return lotteryData ? lotteryData.lottery[lotteryData.selectedIndex].idea : "";
 }
 
 function sumArray(arr) {
-    return arr.reduce((acc, v) => acc + v, 0);
+    // return arr.reduce((acc, v) => acc + v, 0);
 }
 
 function rouletteStart() {
-    state = 1;
-    startTime = millis();
+    // state = 1;
+    // startTime = millis();
 }
 
 function share() {
-    const share_line = document.getElementById("js-share-line");
-    share_line.setAttribute(
-        "href",
-        "https://social-plugins.line.me/lineit/share?url=" + share_url
-    );
+    // const share_line = document.getElementById("js-share-line");
+    // share_line.setAttribute(
+    //     "href",
+    //     "https://social-plugins.line.me/lineit/share?url=" + share_url
+    // );
 }
 
 // ----------------------------------------------------------------------------
@@ -288,10 +288,10 @@ function ideaSubmit(e) {
 }
 
 function willButtonClicked(e) {
-    e.preventDefault();
-    const will = slider.value;
-    slider.disabled = true;
-    socket.emit('will input', will);
+    // e.preventDefault();
+    // const will = slider.value;
+    // slider.disabled = true;
+    // socket.emit('will input', will);
 }
 
 function lotteryButtonClicked() {
@@ -372,9 +372,18 @@ function ideaReleased(data) {
     }
 }
 
+// let willArray = []; 
+
 function willInputReceived(data) {
-    will = data.will;
-    if(will < minWill) {
-        minWill = will;
-    }
+    // will = data.will;
+    // if(will > minWill) {
+    //     minWill = will;
+    // }
+
+    // willArray.push(data);
+    // let sum = 0;
+    // for(let i = 0; i < willArray.length; i++){
+    //     sum += willArray[i];
+    // }
+    // minWill = sum / willArray.length;
 }
