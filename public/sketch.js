@@ -32,8 +32,8 @@ function setup() {
     canvas.mouseReleased(canvasMouseReleased);
 
     ideaForm.addEventListener('submit', ideaSubmit);
-    willButton.addEventListener('click', willButtonClicked);
-    lotteryButton.addEventListener('click', lotteryButtonClicked);
+    // willButton.addEventListener('click', willButtonClicked);
+    // lotteryButton.addEventListener('click', lotteryButtonClicked);
 
     socket = io();
     socket.on('idea log', ideaLogReceived);
@@ -287,12 +287,12 @@ function ideaSubmit(e) {
     return false;
 }
 
-function willButtonClicked(e) {
-    // e.preventDefault();
-    // const will = slider.value;
-    // slider.disabled = true;
-    // socket.emit('will input', will);
-}
+// function willButtonClicked(e) {
+//     // e.preventDefault();
+//     // const will = slider.value;
+//     // slider.disabled = true;
+//     // socket.emit('will input', will);
+// }
 
 function lotteryButtonClicked() {
     socket.emit('lottery start');
