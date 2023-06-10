@@ -30,8 +30,7 @@ function setup() {
     canvas.mouseReleased(canvasMouseReleased);
 
     ideaForm.addEventListener('submit', ideaSubmit);
-    // willButton.addEventListener('click', willButtonClicked);
-    // lotteryButton.addEventListener('click', lotteryButtonClicked);
+    //
 
     socket = io();
     socket.on('idea log', ideaLogReceived);
